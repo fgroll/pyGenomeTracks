@@ -396,6 +396,13 @@ def get_region(region_string):
         return chrom, region_start, region_end
 
 
+def remove_comments(text):
+    """
+    removes all comment line from a string
+    """
+    return '\n'.join(line for line in text.split('\n') if not line.startswith('#'))
+
+
 class MyBasePairFormatter(Formatter):
     """
     Format tick values as pretty numbers and add as offset the unit

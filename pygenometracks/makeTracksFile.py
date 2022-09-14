@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 from pygenometracks.tracksClass import PlotTracks
+from pygenometracks.utilities import remove_comments
 
 from pygenometracks._version import __version__
 
@@ -28,6 +29,10 @@ def parse_arguments(args=None):
                         type=argparse.FileType('w'),
                         required=True)
 
+    parser.add_argument('--no-comments', '-C',
+                        help='Remove comments from the configuration file',
+                        action='store_true')
+
     parser.add_argument('--version', action='version',
                         version=f'%(prog)s {__version__}')
 
@@ -38,7 +43,7 @@ def main(args=None):
     args = parse_arguments().parse_args(args)
     available_tracks = PlotTracks.get_available_tracks()
 
-    args.out.write("""
+    default_config = """
 [x-axis]
 #optional
 #fontsize = 20
@@ -49,7 +54,12 @@ def main(args=None):
 # height of space in cm (optional)
 height = 0.5
 
-""")
+"""
+
+    if args.no_comments:
+        default_config = remove_comments(default_config)
+
+    args.out.write(default_config)
     for file_h in args.trackFiles:
         track_added = False
         label = ".".join(os.path.basename(file_h.name).split(".")[0:-1])
@@ -58,6 +68,8 @@ height = 0.5
                 if file_h.name.endswith(ending):
                     default_values = track_class.OPTIONS_TXT
                     default_values = default_values.replace("title =", f"title = {label}")
+                    if args.no_comments:
+                        default_values = remove_comments(default_values)
                     args.out.write(f"\n[{label}]\nfile = {file_h.name}\n{default_values}")
 
                     sys.stdout.write(f"Adding {track_type} file: {file_h.name}\n")
